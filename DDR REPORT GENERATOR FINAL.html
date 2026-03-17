@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>DDR Report Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+  :root {
+    --bg: #0d0d0f; --surface: #141416; --surface2: #1c1c20;
+    --border: #2a2a30; --accent: #e8c547; --accent2: #4fd1a5;
+    --danger: #f07070; --text: #e8e8ec; --muted: #7a7a88; --card-bg: #18181c;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-serif; min-height: 100vh; overflow-x: hidden; }
+  body::before { content: ''; position: fixed; inset: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E"); pointer-events: none; z-index: 0; opacity: 0.5; }
+  .container { max-width: 900px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+  header { padding: 52px 0 32px; border-bottom: 1px solid var(--border); }
+  .logo-row { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
+  .logo-badge { background: var(--accent); color: #0d0d0f; font-family: 'DM Mono', monospace; font-size: 10px; font-weight: 500; letter-spacing: 0.12em; padding: 4px 10px; border-radius: 3px; text-transform: uppercase; }
+  .logo-line { height: 1px; flex: 1; background: linear-gradient(90deg, var(--border), transparent); }
+  h1 { font-family: 'DM Serif Display', serif; font-size: clamp(32px, 5vw, 52px); font-weight: 400; line-height: 1.1; letter-spacing: -0.02em; }
+  h1 em { font-style: italic; color: var(--accent); }
+  .subtitle { margin-top: 12px; color: var(--muted); font-size: 14px; max-width: 520px; line-height: 1.6; }
+  .api-section { margin: 36px 0 0; padding: 24px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; }
+  .section-label { font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; font-family: 'DM Mono', monospace; }
+  .api-row { display: flex; gap: 10px; }
+  input[type="password"] { flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: 7px; color: var(--text); font-family: 'DM Mono', monospace; font-size: 13px; padding: 11px 16px; outline: none; transition: border-color 0.2s; }
+  input:focus { border-color: var(--accent); }
+  .btn-save { background: var(--accent); color: #0d0d0f; border: none; border-radius: 7px; padding: 11px 20px; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 13px; cursor: pointer; white-space: nowrap; }
+  .btn-save:hover { opacity: 0.88; }
+  .key-status { margin-top: 10px; font-size: 12px; font-family: 'DM Mono', monospace; color: var(--muted); }
+  .key-status.ok { color: var(--accent2); }
+  .key-status a { color: var(--accent); }
+  .upload-section { margin: 32px 0; display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .drop-zone { border: 1.5px dashed var(--border); border-radius: 12px; padding: 32px 20px; text-align: center; cursor: pointer; transition: border-color 0.2s, background 0.2s; background: var(--card-bg); position: relative; }
+  .drop-zone:hover, .drop-zone.dragover { border-color: var(--accent); background: rgba(232,197,71,0.04); }
+  .drop-zone.loaded { border-color: var(--accent2); background: rgba(79,209,165,0.04); }
+  .drop-icon { font-size: 32px; margin-bottom: 12px; display: block; }
+  .drop-title { font-weight: 700; font-size: 14px; margin-bottom: 6px; }
+  .drop-sub { font-size: 12px; color: var(--muted); font-family: 'DM Mono', monospace; }
+  .drop-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  .file-name { margin-top: 10px; font-size: 11px; font-family: 'DM Mono', monospace; color: var(--accent2); word-break: break-all; }
+  .generate-row { display: flex; justify-content: center; margin: 8px 0 40px; }
+  .btn-generate { background: var(--accent); color: #0d0d0f; border: none; border-radius: 10px; padding: 16px 48px; font-family: 'Syne', sans-serif; font-weight: 800; font-size: 16px; cursor: pointer; letter-spacing: 0.02em; box-shadow: 0 4px 24px rgba(232,197,71,0.18); transition: all 0.2s; }
+  .btn-generate:hover:not(:disabled) { opacity: 0.88; transform: translateY(-2px); }
+  .btn-generate:disabled { opacity: 0.35; cursor: not-allowed; }
+  .loading-box { display: none; text-align: center; padding: 48px 24px; border: 1px solid var(--border); border-radius: 12px; background: var(--card-bg); margin-bottom: 40px; }
+  .loading-box.visible { display: block; }
+  .spinner { width: 44px; height: 44px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.9s linear infinite; margin: 0 auto 20px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--muted); }
+  .loading-step { color: var(--accent); font-weight: 500; margin-top: 6px; font-size: 12px; }
+  .error-box { display: none; padding: 18px 20px; border: 1px solid var(--danger); border-radius: 10px; background: rgba(240,112,112,0.07); color: var(--danger); font-family: 'DM Mono', monospace; font-size: 13px; margin-bottom: 32px; line-height: 1.6; white-space: pre-wrap; }
+  .error-box.visible { display: block; }
+  #reportOutput { display: none; animation: fadeUp 0.5s ease; }
+  #reportOutput.visible { display: block; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+  .report-header { border-bottom: 1px solid var(--border); padding-bottom: 28px; margin-bottom: 36px; }
+  .report-tag { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent2); margin-bottom: 10px; }
+  .report-title { font-family: 'DM Serif Display', serif; font-size: 34px; font-weight: 400; letter-spacing: -0.02em; }
+  .report-meta { margin-top: 10px; font-size: 12px; color: var(--muted); font-family: 'DM Mono', monospace; }
+  .ddr-section { margin-bottom: 40px; padding: 28px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; position: relative; overflow: hidden; }
+  .ddr-section::before { content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 100%; background: var(--accent); }
+  .ddr-section.sev-high::before { background: var(--danger); }
+  .ddr-section.sev-low::before { background: var(--accent2); }
+  .section-num { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); letter-spacing: 0.1em; margin-bottom: 8px; }
+  .section-heading { font-size: 18px; font-weight: 800; margin-bottom: 18px; }
+  .section-content { font-size: 14px; line-height: 1.75; color: #c8c8d0; }
+  .section-content h4 { font-size: 13px; font-weight: 700; color: var(--accent2); margin: 16px 0 6px; }
+  .section-content h3 { font-size: 12px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em; margin: 20px 0 8px; }
+  .section-content p { margin-bottom: 10px; }
+  .section-content ul { padding-left: 18px; margin-bottom: 10px; }
+  .section-content ul li { margin-bottom: 6px; }
+  .section-content strong { color: var(--text); }
+  .na { display: inline-block; background: rgba(122,122,136,0.15); color: var(--muted); font-family: 'DM Mono', monospace; font-size: 11px; padding: 2px 8px; border-radius: 4px; border: 1px solid var(--border); }
+  .sbadge { display: inline-flex; align-items: center; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; font-family: 'DM Mono', monospace; letter-spacing: 0.06em; text-transform: uppercase; }
+  .sbadge.high { background: rgba(240,112,112,0.15); color: var(--danger); border: 1px solid rgba(240,112,112,0.3); }
+  .sbadge.medium { background: rgba(232,197,71,0.12); color: var(--accent); border: 1px solid rgba(232,197,71,0.3); }
+  .sbadge.low { background: rgba(79,209,165,0.12); color: var(--accent2); border: 1px solid rgba(79,209,165,0.3); }
+  .conflict-note { background: rgba(240,112,112,0.08); border: 1px solid rgba(240,112,112,0.25); border-radius: 7px; padding: 12px 16px; margin: 10px 0; font-size: 13px; color: #e8a0a0; }
+  footer { border-top: 1px solid var(--border); padding: 28px 0 48px; margin-top: 40px; text-align: center; font-size: 12px; color: var(--muted); font-family: 'DM Mono', monospace; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="logo-row">
+      <span class="logo-badge">DDR System</span>
+      <div class="logo-line"></div>
+    </div>
+    <h1>Detailed Diagnostic<br/><em>Report Generator</em></h1>
+    <p class="subtitle">Upload your Inspection Report and Thermal Report. The AI will extract, merge, and structure a complete client-ready DDR automatically.</p>
+  </header>
+
+  <div class="api-section" style="margin-top:36px;">
+    <div class="section-label">Step 1 — Groq API Key &nbsp;<span style="color:var(--accent2);font-size:10px;font-weight:400;text-transform:none;letter-spacing:0;">100% Free · No billing required</span></div>
+    <div class="api-row">
+      <input type="password" id="apiKeyInput" placeholder="Paste your Groq API key (gsk_...)" />
+      <button class="btn-save" onclick="saveKey()">Save Key</button>
+    </div>
+    <div class="key-status" id="keyStatus">
+      No key yet? Get one free (1 min) at <a href="https://console.groq.com/keys" target="_blank">console.groq.com/keys</a>
+    </div>
+  </div>
+
+  <div style="margin-top:32px;"><div class="section-label">Step 2 — Upload Documents</div></div>
+  <div class="upload-section">
+    <div class="drop-zone" id="zone1" ondragover="dov(event,'zone1')" ondragleave="dol('zone1')" ondrop="dof(event,'zone1','insp','inspName')">
+      <input type="file" accept=".pdf" onchange="fc(this,'zone1','insp','inspName')"/>
+      <span class="drop-icon">📋</span>
+      <div class="drop-title">Inspection Report</div>
+      <div class="drop-sub">PDF only — drop or click</div>
+      <div class="file-name" id="inspName"></div>
+    </div>
+    <div class="drop-zone" id="zone2" ondragover="dov(event,'zone2')" ondragleave="dol('zone2')" ondrop="dof(event,'zone2','therm','thermName')">
+      <input type="file" accept=".pdf" onchange="fc(this,'zone2','therm','thermName')"/>
+      <span class="drop-icon">🌡️</span>
+      <div class="drop-title">Thermal Report</div>
+      <div class="drop-sub">PDF only — drop or click</div>
+      <div class="file-name" id="thermName"></div>
+    </div>
+  </div>
+
+  <div class="generate-row">
+    <button class="btn-generate" id="genBtn" onclick="generate()" disabled>⚡ Generate DDR Report</button>
+  </div>
+
+  <div class="loading-box" id="loadingBox">
+    <div class="spinner"></div>
+    <div class="loading-text">Analysing documents with Groq AI…</div>
+    <div class="loading-step" id="loadingStep">Extracting text from PDFs…</div>
+  </div>
+
+  <div class="error-box" id="errorBox"></div>
+
+  <div id="reportOutput">
+    <div class="report-header">
+      <div class="report-tag">Generated DDR · AI-Assisted Analysis · Powered by Groq</div>
+      <div class="report-title">Detailed Diagnostic Report</div>
+      <div class="report-meta" id="reportMeta"></div>
+    </div>
+    <div id="reportSections"></div>
+  </div>
+
+  <footer>DDR Report Generator · Groq (Llama 3.3 70B) · AI Generalist Assignment</footer>
+</div>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+let apiKey = '', inspFile = null, thermFile = null;
+
+function saveKey() {
+  const v = document.getElementById('apiKeyInput').value.trim();
+  const st = document.getElementById('keyStatus');
+  if (!v.startsWith('gsk_')) {
+    st.className = 'key-status';
+    st.innerHTML = '✗ Not a valid Groq key (must start with gsk_). <a href="https://console.groq.com/keys" target="_blank">Get one here</a>';
+    return;
+  }
+  apiKey = v;
+  st.className = 'key-status ok';
+  st.textContent = '✓ Groq key saved for this session.';
+  ready();
+}
+
+function dov(e, id) { e.preventDefault(); document.getElementById(id).classList.add('dragover'); }
+function dol(id) { document.getElementById(id).classList.remove('dragover'); }
+function dof(e, z, v, l) { e.preventDefault(); dol(z); const f = e.dataTransfer.files[0]; if (f && f.type==='application/pdf') af(f,z,v,l); else err('PDF files only.'); }
+function fc(input, z, v, l) { if (input.files[0]) af(input.files[0],z,v,l); }
+function af(file, z, v, l) {
+  if (v==='insp') inspFile=file; else thermFile=file;
+  document.getElementById(l).textContent = '✓ '+file.name;
+  document.getElementById(z).classList.add('loaded');
+  ready();
+}
+function ready() { document.getElementById('genBtn').disabled = !(apiKey && inspFile && thermFile); }
+function err(msg) { const e=document.getElementById('errorBox'); e.textContent=msg; e.className='error-box visible'; }
+function clearErr() { document.getElementById('errorBox').className='error-box'; }
+
+async function extractText(file) {
+  const buf = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+  let txt = '';
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    txt += '\n--- Page ' + i + ' ---\n' + content.items.map(x => x.str).join(' ');
+  }
+  return txt;
+}
+
+async function generate() {
+  clearErr();
+  document.getElementById('reportOutput').className = '';
+  document.getElementById('loadingBox').className = 'loading-box visible';
+  document.getElementById('genBtn').disabled = true;
+  const stepEl = document.getElementById('loadingStep');
+
+  try {
+    stepEl.textContent = 'Extracting text from Inspection Report…';
+    const inspText = await extractText(inspFile);
+
+    stepEl.textContent = 'Extracting text from Thermal Report…';
+    const thermText = await extractText(thermFile);
+
+    stepEl.textContent = 'Sending to Groq AI (Llama 3.3 70B)…';
+
+    const prompt = `You are an expert building diagnostics engineer. Analyse these two documents and generate a DDR report.
+
+=== INSPECTION REPORT ===
+${inspText.slice(0, 7000)}
+
+=== THERMAL REPORT ===
+${thermText.slice(0, 7000)}
+
+Rules:
+- Do NOT invent facts. Only use what is in the documents.
+- If info is missing, use exactly: "Not Available"
+- If data conflicts between documents, describe the conflict
+- No duplicate observations
+- Client-friendly language, no jargon
+
+Return ONLY a valid JSON object with NO markdown fences, NO explanation, just raw JSON:
+
+{
+  "property_name": "string or Not Available",
+  "report_date": "string or Not Available",
+  "property_issue_summary": "2-4 sentence overview of main issues",
+  "area_observations": [
+    {
+      "area": "location name",
+      "observations": ["obs 1", "obs 2"],
+      "thermal_findings": "thermal data or Not Available",
+      "has_conflict": false,
+      "conflict_note": ""
+    }
+  ],
+  "probable_root_causes": [
+    {"cause": "description", "related_areas": ["area"]}
+  ],
+  "severity_assessment": {
+    "overall": "High or Medium or Low",
+    "reasoning": "explanation",
+    "breakdown": [
+      {"area": "name", "severity": "High or Medium or Low", "reason": "reason"}
+    ]
+  },
+  "recommended_actions": [
+    {"priority": "Immediate or Short-term or Long-term", "action": "description", "area": "area name"}
+  ],
+  "additional_notes": ["note"],
+  "missing_or_unclear": ["item"]
+}`;
+
+    stepEl.textContent = 'Groq AI is analysing…';
+
+    const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.1,
+        max_tokens: 4096
+      })
+    });
+
+    if (!resp.ok) {
+      const e = await resp.json();
+      throw new Error(e.error?.message || 'Groq API error ' + resp.status);
+    }
+
+    const data = await resp.json();
+    const raw = data.choices?.[0]?.message?.content || '';
+    const clean = raw.replace(/```json|```/g, '').trim();
+
+    let ddr;
+    try { ddr = JSON.parse(clean); }
+    catch {
+      const m = clean.match(/\{[\s\S]*\}/);
+      if (m) { try { ddr = JSON.parse(m[0]); } catch { throw new Error('Could not parse JSON.\n\n' + raw.slice(0, 400)); } }
+      else throw new Error('AI did not return valid JSON.\n\n' + raw.slice(0, 400));
+    }
+
+    document.getElementById('loadingBox').className = 'loading-box';
+    render(ddr);
+
+  } catch(e) {
+    document.getElementById('loadingBox').className = 'loading-box';
+    err('Error: ' + e.message);
+    document.getElementById('genBtn').disabled = false;
+  }
+}
+
+function na(v) { return (!v || v === 'Not Available') ? '<span class="na">Not Available</span>' : v; }
+function badge(s) { const c=(s||'').toLowerCase(); return `<span class="sbadge ${c}">${s||'N/A'}</span>`; }
+
+function render(ddr) {
+  document.getElementById('reportMeta').textContent =
+    `Property: ${ddr.property_name||'N/A'}   |   Date: ${ddr.report_date||'N/A'}   |   Generated: ${new Date().toLocaleString()}`;
+
+  const sev = (ddr.severity_assessment?.overall||'').toLowerCase();
+
+  const sections = [
+    { num:'01', title:'Property Issue Summary', cls:'',
+      html:`<div class="section-content"><p>${na(ddr.property_issue_summary)}</p></div>` },
+
+    { num:'02', title:'Area-wise Observations', cls:'',
+      html: !ddr.area_observations?.length ? `<div class="section-content"><p>${na(null)}</p></div>` :
+        ddr.area_observations.map(a=>`
+          <div class="section-content" style="margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border)">
+            <h4>📍 ${a.area||'Unknown'}</h4>
+            ${a.has_conflict?`<div class="conflict-note">${a.conflict_note}</div>`:''}
+            <ul>${(a.observations||[]).map(o=>`<li>${o}</li>`).join('')}</ul>
+            <p><strong>🌡 Thermal:</strong> ${a.thermal_findings && a.thermal_findings!=='Not Available' ? a.thermal_findings : '<span class="na">Not Available</span>'}</p>
+          </div>`).join('') },
+
+    { num:'03', title:'Probable Root Cause', cls:'',
+      html: !ddr.probable_root_causes?.length ? `<div class="section-content"><p>${na(null)}</p></div>` :
+        `<div class="section-content"><ul>${ddr.probable_root_causes.map(c=>`<li><strong>${c.cause}</strong> ${c.related_areas?.length?`<span style="color:var(--muted);font-size:12px">(${c.related_areas.join(', ')})</span>`:''}</li>`).join('')}</ul></div>` },
+
+    { num:'04', title:'Severity Assessment', cls:`sev-${sev}`,
+      html: (()=>{
+        const sa = ddr.severity_assessment||{};
+        const rows = (sa.breakdown||[]).map(b=>`<tr><td style="padding:8px 12px;border-bottom:1px solid var(--border)">${b.area}</td><td style="padding:8px 12px;border-bottom:1px solid var(--border)">${badge(b.severity)}</td><td style="padding:8px 12px;border-bottom:1px solid var(--border);color:var(--muted);font-size:13px">${b.reason}</td></tr>`).join('');
+        return `<div class="section-content"><p>Overall: ${badge(sa.overall)}</p><p style="margin-top:10px">${na(sa.reasoning)}</p>${rows?`<table style="width:100%;margin-top:18px;border-collapse:collapse;font-size:13px">${rows}</table>`:''}</div>`;
+      })() },
+
+    { num:'05', title:'Recommended Actions', cls:'',
+      html: (()=>{
+        if (!ddr.recommended_actions?.length) return `<div class="section-content"><p>${na(null)}</p></div>`;
+        const g = {'Immediate':[],'Short-term':[],'Long-term':[]};
+        ddr.recommended_actions.forEach(r=>(g[r.priority]||g['Short-term']).push(r));
+        const c = {'Immediate':'var(--danger)','Short-term':'var(--accent)','Long-term':'var(--accent2)'};
+        return Object.entries(g).filter(([,v])=>v.length).map(([p,items])=>
+          `<div class="section-content" style="margin-bottom:18px"><h3 style="color:${c[p]}">${p}</h3><ul>${items.map(i=>`<li><strong>${i.area}:</strong> ${i.action}</li>`).join('')}</ul></div>`
+        ).join('');
+      })() },
+
+    { num:'06', title:'Additional Notes', cls:'',
+      html: !ddr.additional_notes?.length ? `<div class="section-content"><p>${na(null)}</p></div>` :
+        `<div class="section-content"><ul>${ddr.additional_notes.map(n=>`<li>${n}</li>`).join('')}</ul></div>` },
+
+    { num:'07', title:'Missing or Unclear Information', cls:'',
+      html: !ddr.missing_or_unclear?.length ? `<div class="section-content"><p>No missing information identified.</p></div>` :
+        `<div class="section-content"><ul>${ddr.missing_or_unclear.map(m=>`<li>${m}</li>`).join('')}</ul></div>` }
+  ];
+
+  document.getElementById('reportSections').innerHTML = sections.map(s=>`
+    <div class="ddr-section ${s.cls}">
+      <div class="section-num">SECTION ${s.num}</div>
+      <div class="section-heading">${s.title}</div>
+      ${s.html}
+    </div>`).join('');
+
+  document.getElementById('reportOutput').className = 'visible';
+  document.getElementById('reportOutput').scrollIntoView({ behavior:'smooth', block:'start' });
+  document.getElementById('genBtn').disabled = false;
+}
+</script>
+</body>
+</html>
