@@ -1,0 +1,142 @@
+{
+  "property_name": "Not Available",
+  "report_date": "27.09.2022",
+  "inspected_by": "Krushna & Mahesh",
+  "property_type": "Flat",
+  "property_age": "Not Available",
+  "floors": "11",
+  "property_issue_summary": "The property has various issues including dampness at skirting levels, gaps between tile joints, and leakage in the parking area. These issues are observed in multiple areas such as the hall, bedrooms, kitchen, and bathrooms. The thermal report also indicates temperature variations across different areas, suggesting potential issues with insulation or water leakage.",
+  "area_observations": [
+    {
+      "area": "Hall",
+      "observations": [
+        "dampness at skirting level"
+      ],
+      "thermal_findings": "Not Available",
+      "inspection_image_pages": [
+        3
+      ],
+      "thermal_image_pages": [],
+      "has_conflict": false,
+      "conflict_note": ""
+    },
+    {
+      "area": "Common Bathroom",
+      "observations": [
+        "gaps between tile joints",
+        "tile hollowness"
+      ],
+      "thermal_findings": "Not Available",
+      "inspection_image_pages": [
+        3,
+        4
+      ],
+      "thermal_image_pages": [],
+      "has_conflict": false,
+      "conflict_note": ""
+    },
+    {
+      "area": "Master Bedroom",
+      "observations": [
+        "dampness at skirting level",
+        "wall dampness"
+      ],
+      "thermal_findings": "Not Available",
+      "inspection_image_pages": [
+        5
+      ],
+      "thermal_image_pages": [],
+      "has_conflict": false,
+      "conflict_note": ""
+    },
+    {
+      "area": "Kitchen",
+      "observations": [
+        "dampness at skirting level"
+      ],
+      "thermal_findings": "Not Available",
+      "inspection_image_pages": [
+        4
+      ],
+      "thermal_image_pages": [],
+      "has_conflict": false,
+      "conflict_note": ""
+    },
+    {
+      "area": "Parking Area",
+      "observations": [
+        "leakage at ceiling"
+      ],
+      "thermal_findings": "Not Available",
+      "inspection_image_pages": [
+        6
+      ],
+      "thermal_image_pages": [],
+      "has_conflict": false,
+      "conflict_note": ""
+    }
+  ],
+  "probable_root_causes": [
+    {
+      "cause": "concealed plumbing issues",
+      "related_areas": [
+        "Hall",
+        "Common Bathroom",
+        "Master Bedroom",
+        "Kitchen"
+      ]
+    },
+    {
+      "cause": "damage in Nahani trap/Brickbat coba under tile flooring",
+      "related_areas": [
+        "Common Bathroom",
+        "Master Bedroom Bathroom"
+      ]
+    }
+  ],
+  "severity_assessment": {
+    "overall": "Medium",
+    "reasoning": "The issues observed are significant but not critical, and the property is still habitable. However, if left unaddressed, these issues could lead to more severe problems.",
+    "breakdown": [
+      {
+        "area": "Hall",
+        "severity": "Low",
+        "reason": "dampness at skirting level is a minor issue"
+      },
+      {
+        "area": "Common Bathroom",
+        "severity": "Medium",
+        "reason": "gaps between tile joints and tile hollowness are moderate issues"
+      },
+      {
+        "area": "Master Bedroom",
+        "severity": "Medium",
+        "reason": "dampness at skirting level and wall dampness are moderate issues"
+      }
+    ]
+  },
+  "recommended_actions": [
+    {
+      "priority": "Short-term",
+      "action": "repair concealed plumbing issues",
+      "area": "Hall, Common Bathroom, Master Bedroom, Kitchen"
+    },
+    {
+      "priority": "Short-term",
+      "action": "fix damage in Nahani trap/Brickbat coba under tile flooring",
+      "area": "Common Bathroom, Master Bedroom Bathroom"
+    },
+    {
+      "priority": "Long-term",
+      "action": "replace tiles and flooring in affected areas",
+      "area": "Hall, Common Bathroom, Master Bedroom, Kitchen"
+    }
+  ],
+  "additional_notes": [
+    "Regular maintenance is necessary to prevent similar issues in the future"
+  ],
+  "missing_or_unclear": [
+    "property age",
+    "thermal findings for each area"
+  ]
+}

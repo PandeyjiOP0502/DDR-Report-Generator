@@ -33,6 +33,15 @@ flowchart LR
 | **Download HTML Report** | Standalone HTML report with embedded images (works offline) |
 | **Download Raw JSON** | Machine-readable structured data export |
 
+## 📸 Screenshots
+
+### Full App — Generated DDR Report
+![DDR Report Generator — Full App with Generated Report](Website%20sample%20Screenshots/screencapture-localhost-8501-2026-03-18-20_35_02.png)
+
+> *The app showing both PDFs uploaded, the AI-generated DDR report with all 7 sections (Property Summary, Area Observations, Root Causes, Severity Assessment, Recommended Actions, Additional Notes, Missing Info), and download options for HTML & JSON.*
+
+---
+
 ## 🚀 Quick Start
 
 ### 1. Install dependencies
@@ -57,12 +66,14 @@ streamlit run app.py
 
 ```
 DDR REPORT GENERATOR FINAL/
-├── app.py                # Main Streamlit application (single file)
-├── requirements.txt      # Python dependencies
-├── README.md            # This file
-├── Sample Report.pdf    # Sample Inspection Report (input)
-├── Thermal Images.pdf   # Sample Thermal Report (input)
-└── Ai Generalist - Assignments.pdf  # Assignment brief
+├── app.py                          # Main Streamlit application (single file)
+├── requirements.txt                # Python dependencies
+├── README.md                       # This file
+├── Sample Report.pdf               # Sample Inspection Report (input)
+├── Thermal Images.pdf              # Sample Thermal Report (input)
+├── Ai Generalist - Assignments.pdf # Assignment brief
+├── Website sample Screenshots/     # App screenshots
+└── HTML files/                     # Sample generated HTML report output
 ```
 
 ## 🛠️ Tech Stack
